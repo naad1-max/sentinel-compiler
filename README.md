@@ -8,7 +8,7 @@ Windows users, don't worry. You'll never have to look at the source code because
 
 ```bash
 $ gh repo clone naad1-max/sentinel-compiler
-$ cd sentinel compiler
+$ cd sentinel-compiler
 # On macOS/Linux
 $ ./compile.sh examples/add-sub.txt
 # On Windows
