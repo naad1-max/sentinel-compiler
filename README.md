@@ -39,7 +39,7 @@ $ ./output
 ### Build a compiler for a small add-subtract language
 
 * [x] Build a lexer.
-* [ ] Add AST definitions.
+* [x] Add AST definitions.
 * [ ] Build a parser.
 * [ ] Build a code generator that generates the C code.
 
