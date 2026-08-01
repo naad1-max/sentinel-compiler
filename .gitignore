@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+
+.venv/
+
+tmp/
+*.o
+*.asm
+*.c
+*.bin
