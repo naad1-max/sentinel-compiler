@@ -8,7 +8,7 @@ Windows users, don't worry. You'll never have to look at the source code because
 
 ```bash
 $ gh repo clone naad1-max/sentinel-compiler
-$ cd sentinel compiler
+$ cd sentinel-compiler
 # On macOS/Linux
 $ ./compile.sh examples/add-sub.txt
 # On Windows
@@ -38,7 +38,7 @@ $ ./output
 
 ### Build a compiler for a small add-subtract language
 
-* [ ] Build a lexer.
+* [x] Build a lexer.
 * [ ] Add AST definitions.
 * [ ] Build a parser.
 * [ ] Build a code generator that generates the C code.
