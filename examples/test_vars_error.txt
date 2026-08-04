@@ -1,0 +1,6 @@
+let x = puts "Hello, world!\n"
+puts x
+
+puts a
+
+exit 0

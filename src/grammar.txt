@@ -1,9 +1,0 @@
-program    -> expression* EOF
-
-expression -> number (operator number)*
-
-operator    -> PLUS
-             | MINUS
-
-number      -> INT
-             | FLOAT
