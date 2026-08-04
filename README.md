@@ -21,7 +21,7 @@ $ ./output
 
 * [x] Build a compiler for a small add-subtract language.
 * [x] Add multiplication, division and modulus.
-* [ ] Add printing to the terminal.
+* [x] Add printing to the terminal.
 * [ ] Add exit.
 * [ ] Add variables.
 * [ ] Add if/else if/else/while/for.
@@ -51,9 +51,9 @@ $ ./output
 
 ### Add printing to the terminal
 
-* [ ] Improve the lexer to be able to peek at the next token without advancing the cursor, and add support for string literals, integers and floating points. With this, check if after the `println` token there are parentheses and if those parentheses contain anything that can be written to standard output.
-* [ ] Modify the parser to include the new expression and a few new literal types.
-* [ ] Update the code generator to include the `printf` keyword.
+* [x] Improve the lexer to be able to peek at the next token without advancing the cursor, and add support for string literals, integers and floating points. With this, check if after the `puts` token there are parentheses and if those parentheses contain anything that can be written to standard output.
+* [x] Modify the parser to include the new expression and a few new literal types.
+* [x] Update the code generator to include the `printf` keyword.
 
 ### Add exit
 
