@@ -10,9 +10,9 @@ Windows users, don't worry. You'll never have to look at the source code because
 $ gh repo clone naad1-max/sentinel-compiler
 $ cd sentinel-compiler
 # On macOS/Linux
-$ ./compile.sh examples/add-sub.txt
+$ ./compile.sh examples/test_math_eval.txt
 # On Windows
-$ .\\compile.ps1 .\\examples\\add-sub.txt
+$ .\\compile.ps1 .\\examples\\test_math_eval.txt
 # Running the file: universal
 $ ./output
 ```
@@ -57,9 +57,9 @@ $ ./output
 
 ### Add exit
 
-* [ ] Modify the lexer to check parentheses after `exit` keyword and use default code `0` or whatever integer is given in the parentheses. Make sure to throw errors if the data type is not recognised. Also make sure that after `exit(<int>)`, there is nothing, otherwise throw an error.
-* [ ] Modify the parser to include another expression.
-* [ ] Modify the code generator to include the C keyword for exit.
+* [x] Modify the lexer to check parentheses after `exit` keyword and use default code `0` or whatever integer is given in the parentheses. Make sure to throw errors if the data type is not recognised. Also make sure that after `exit(<int>)`, there is nothing, otherwise throw an error.
+* [x] Modify the parser to include another expression.
+* [x] Modify the code generator to include the C keyword for exit.
 
 ### Add variables
 

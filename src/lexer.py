@@ -12,6 +12,7 @@ class TokenType(Enum):
     SLASH = auto()
     MOD = auto()
     PUTS = auto()
+    EXIT = auto()
     EOF = auto()
 
 
@@ -126,6 +127,9 @@ class Lexer:
 
         if text == "puts":
             return Token(TokenType.PUTS, text, start)
+
+        if text == "exit":
+            return Token(TokenType.EXIT, text, start)
 
         raise LexerError(f"Unknown keyword {text!r} at position {start}")
 

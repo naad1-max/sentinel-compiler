@@ -1,3 +1,2 @@
-python.exe .\src\compiler.py .\examples\example.txt
+python.exe .\src\compiler.py Read-Host
 gcc.exe .\output.c -o .\output.exe
-.\output.exe

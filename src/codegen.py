@@ -1,4 +1,12 @@
-from parser import Parser, Program, NumberExpr, StringExpr, BinaryExpr, PutsStmt
+from parser import (
+    Parser,
+    Program,
+    NumberExpr,
+    StringExpr,
+    BinaryExpr,
+    PutsStmt,
+    ExitStmt,
+)
 from lexer import TokenType
 
 
@@ -13,13 +21,15 @@ class CCodeGenerator:
         for statement in program.statements:
             lines.append(self.statement(statement))
 
+        if not program.statements or not isinstance(program.statements[-1], ExitStmt):
+            lines.append("    return 0;")
+
         body = "\n".join(lines)
 
         return f"""#include <stdio.h>
 
 int main(void) {{
 {body}
-    return 0;
 }}
 """
 
@@ -67,6 +77,9 @@ int main(void) {{
         if isinstance(statement, PutsStmt):
             return self.puts(statement)
 
+        if isinstance(statement, ExitStmt):
+            return self.exit(statement)
+
         expression_code = self.expression(statement)
         return f'    printf("%g\\n", (double)({expression_code}));'
 
@@ -77,6 +90,9 @@ int main(void) {{
 
         expression_code = self.expression(statement.value)
         return f'    printf("%g\\n", (double)({expression_code}));'
+
+    def exit(self, statement: ExitStmt) -> str:
+        return f"    return {statement.code};"
 
     def c_string(self, value: str) -> str:
         return (
