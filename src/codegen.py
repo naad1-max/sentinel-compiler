@@ -1,4 +1,4 @@
-from parser import Parser, Program, NumberExpr, BinaryExpr
+from parser import Parser, Program, NumberExpr, StringExpr, BinaryExpr, PutsStmt
 from lexer import TokenType
 
 
@@ -10,9 +10,8 @@ class CCodeGenerator:
     def generate(self, program: Program) -> str:
         lines = []
 
-        for expr in program.expressions:
-            expression_code = self.expression(expr)
-            lines.append(f'    printf("%g\\n", (double){expression_code});')
+        for statement in program.statements:
+            lines.append(self.statement(statement))
 
         body = "\n".join(lines)
 
@@ -27,6 +26,9 @@ int main(void) {{
     def expression(self, expr) -> str:
         if isinstance(expr, NumberExpr):
             return self.number(expr)
+
+        if isinstance(expr, StringExpr):
+            raise CodeGenError("String expressions can only be used with puts")
 
         if isinstance(expr, BinaryExpr):
             return self.binary(expr)
@@ -60,6 +62,30 @@ int main(void) {{
             return "*"
 
         raise CodeGenError(f"Unknown binary operator: {token_type}")
+
+    def statement(self, statement) -> str:
+        if isinstance(statement, PutsStmt):
+            return self.puts(statement)
+
+        expression_code = self.expression(statement)
+        return f'    printf("%g\\n", (double)({expression_code}));'
+
+    def puts(self, statement: PutsStmt) -> str:
+        if isinstance(statement.value, StringExpr):
+            value = self.c_string(statement.value.value)
+            return f'    printf("%s\\n", "{value}");'
+
+        expression_code = self.expression(statement.value)
+        return f'    printf("%g\\n", (double)({expression_code}));'
+
+    def c_string(self, value: str) -> str:
+        return (
+            value
+            .replace("\\", "\\\\")
+            .replace('"', '\\"')
+            .replace("\n", "\\n")
+            .replace("\t", "\\t")
+        )
 
 
 if __name__ == "__main__":

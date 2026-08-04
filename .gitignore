@@ -3,11 +3,10 @@ __pycache__/
 
 .venv/
 
-tmp/
 *.o
 *.asm
 *.c
 *.bin
 
-output
-output.c
+*output
+output.*

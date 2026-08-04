@@ -19,8 +19,18 @@ class BinaryExpr:
 
 
 @dataclass(frozen=True)
+class StringExpr:
+    value: str
+
+
+@dataclass(frozen=True)
+class PutsStmt:
+    value: object
+
+
+@dataclass(frozen=True)
 class Program:
-    expressions: list[object]
+    statements: list[object]
 
 
 class Parser:
@@ -48,13 +58,28 @@ class Parser:
         return self.advance()
 
     def parse(self) -> Program:
-        expressions = []
+        statements = []
 
         while self.current_token().type != TokenType.EOF:
-            expressions.append(self.expression())
+            statements.append(self.statement())
 
         self.expect(TokenType.EOF)
-        return Program(expressions)
+        return Program(statements)
+
+    def statement(self):
+        if self.current_token().type == TokenType.PUTS:
+            return self.puts_statement()
+
+        return self.expression()
+
+    def puts_statement(self):
+        self.expect(TokenType.PUTS)
+
+        if self.current_token().type == TokenType.STRING:
+            token = self.advance()
+            return PutsStmt(StringExpr(token.value))
+
+        return PutsStmt(self.expression())
 
     def expression(self):
         left = self.term()
@@ -62,12 +87,13 @@ class Parser:
         while self.current_token().type in (TokenType.PLUS, TokenType.MINUS):
             operator = self.advance()
             right = self.term()
+            self.validate_numeric_binary(left, right, operator)
             left = BinaryExpr(left, operator.type, right)
 
         return left
 
     def term(self):
-        left = self.number()
+        left = self.primary()
 
         while self.current_token().type in (
             TokenType.STAR,
@@ -75,7 +101,7 @@ class Parser:
             TokenType.MOD,
         ):
             operator = self.advance()
-            right = self.number()
+            right = self.primary()
 
             if operator.type == TokenType.MOD:
                 self.validate_modulus(left, right, operator)
@@ -83,6 +109,32 @@ class Parser:
             left = BinaryExpr(left, operator.type, right)
 
         return left
+
+    def validate_numeric_binary(self, left, right, operator: Token):
+        if isinstance(left, StringExpr) or isinstance(right, StringExpr):
+            raise ParserError(
+                f"Operator {operator.value!r} requires numeric operands "
+                f"at position {operator.position}"
+            )
+
+    def primary(self):
+        token = self.current_token()
+
+        if token.type == TokenType.INT:
+            self.advance()
+            return NumberExpr(token.value)
+
+        if token.type == TokenType.FLOAT:
+            self.advance()
+            return NumberExpr(token.value)
+
+        if token.type == TokenType.STRING:
+            self.advance()
+            return StringExpr(token.value)
+
+        raise ParserError(
+            f"Expected expression, got {token.type.name} at position {token.position}"
+        )
 
     def number(self):
         token = self.current_token()
