@@ -49,6 +49,30 @@ class LetStmt:
     value: object
 
 
+@dataclass(frozen=True)
+class BlockStmt:
+    statements: list[object]
+
+
+@dataclass(frozen=True)
+class IfStmt:
+    condition: object
+    then_body: BlockStmt
+    else_body: BlockStmt | None
+
+
+@dataclass(frozen=True)
+class WhileStmt:
+    condition: object
+    body: BlockStmt
+
+
+@dataclass(frozen=True)
+class ForStmt:
+    condition: object
+    body: BlockStmt
+
+
 class Parser:
     def __init__(self, source: str):
         self.tokens = Lexer(source).tokenize()
@@ -78,7 +102,15 @@ class Parser:
         statements = []
 
         while self.current_token().type != TokenType.EOF:
-            statements.append(self.statement())
+            statement = self.statement()
+            statements.append(statement)
+
+            if isinstance(statement, ExitStmt) and self.current_token().type != TokenType.EOF:
+                token = self.current_token()
+                raise ParserError(
+                    f"Unexpected token after exit statement: {token.type.name} "
+                    f"at position {token.position}"
+                )
 
         self.expect(TokenType.EOF)
         return Program(statements)
@@ -92,6 +124,15 @@ class Parser:
 
         if self.current_token().type == TokenType.EXIT:
             return self.exit_statement()
+
+        if self.current_token().type == TokenType.IF:
+            return self.if_statement()
+
+        if self.current_token().type == TokenType.WHILE:
+            return self.while_statement()
+
+        if self.current_token().type == TokenType.FOR:
+            return self.for_statement()
 
         return self.expression()
 
@@ -135,16 +176,7 @@ class Parser:
                 f"at position {token.position}"
             )
 
-        code = self.advance().value
-
-        if self.current_token().type != TokenType.EOF:
-            token = self.current_token()
-            raise ParserError(
-                f"Unexpected token after exit statement: {token.type.name} "
-                f"at position {token.position}"
-            )
-
-        return ExitStmt(code)
+        return ExitStmt(self.advance().value)
 
     def puts_statement(self):
         self.expect(TokenType.PUTS)
@@ -154,6 +186,62 @@ class Parser:
             return PutsStmt(StringExpr(token.value))
 
         return PutsStmt(self.expression())
+
+    def block(self) -> BlockStmt:
+        self.expect(TokenType.LBRACE)
+
+        statements = []
+
+        while self.current_token().type != TokenType.RBRACE:
+            if self.current_token().type == TokenType.EOF:
+                token = self.current_token()
+                raise ParserError(
+                    f"Expected '}}' before EOF at position {token.position}"
+                )
+
+            statements.append(self.statement())
+
+        self.expect(TokenType.RBRACE)
+        return BlockStmt(statements)
+
+    def validate_condition(self, condition):
+        condition_type = self.resolve_type(condition)
+
+        if condition_type == "string":
+            raise ParserError("Condition expression must be numeric")
+
+    def if_statement(self):
+        self.expect(TokenType.IF)
+
+        condition = self.expression()
+        self.validate_condition(condition)
+
+        then_body = self.block()
+        else_body = None
+
+        if self.current_token().type == TokenType.ELSE:
+            self.advance()
+            else_body = self.block()
+
+        return IfStmt(condition, then_body, else_body)
+
+    def while_statement(self):
+        self.expect(TokenType.WHILE)
+
+        condition = self.expression()
+        self.validate_condition(condition)
+
+        body = self.block()
+        return WhileStmt(condition, body)
+
+    def for_statement(self):
+        self.expect(TokenType.FOR)
+
+        condition = self.expression()
+        self.validate_condition(condition)
+
+        body = self.block()
+        return ForStmt(condition, body)
 
     def expression(self):
         left = self.term()

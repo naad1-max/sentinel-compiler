@@ -1,21 +1,30 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 
-
 class TokenType(Enum):
     INT = auto()
     FLOAT = auto()
     STRING = auto()
     IDENTIFIER = auto()
+
     PLUS = auto()
     MINUS = auto()
     STAR = auto()
     SLASH = auto()
     MOD = auto()
     EQUAL = auto()
+
+    LBRACE = auto()
+    RBRACE = auto()
+
     PUTS = auto()
     EXIT = auto()
     LET = auto()
+    IF = auto()
+    ELSE = auto()
+    WHILE = auto()
+    FOR = auto()
+
     EOF = auto()
 
 
@@ -121,6 +130,16 @@ class Lexer:
             self.advance()
             return token
 
+        if ch == "{":
+            token = Token(TokenType.LBRACE, ch, self.pos)
+            self.advance()
+            return token
+
+        if ch == "}":
+            token = Token(TokenType.RBRACE, ch, self.pos)
+            self.advance()
+            return token
+
         raise LexerError(f"Unexpected character {ch!r} at position {self.pos}")
 
     def identifier(self):
@@ -137,6 +156,10 @@ class Lexer:
             "puts": TokenType.PUTS,
             "exit": TokenType.EXIT,
             "let": TokenType.LET,
+            "if": TokenType.IF,
+            "else": TokenType.ELSE,
+            "while": TokenType.WHILE,
+            "for": TokenType.FOR,
         }
 
         token_type = keywords.get(text, TokenType.IDENTIFIER)

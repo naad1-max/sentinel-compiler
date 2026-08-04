@@ -24,7 +24,7 @@ $ ./output
 * [x] Add printing to the terminal.
 * [x] Add exit.
 * [x] Add variables.
-* [ ] Add if/else if/else/while/for.
+* [x] Add if/else/while/for.
 * [ ] Add data types.
 * [ ] Add type checking.
 * [ ] Add functions.
@@ -69,9 +69,9 @@ $ ./output
 
 ### Add if/else if/else/while/for
 
-* [ ] Modify the lexer to support the keywords.
-* [ ] Modify the parser to include generic `condition, body` blocks and use them to make the mini-AST in the AST.
-* [ ] Modify the code generator to produce the loops and control flow.
+* [x] Modify the lexer to support the keywords.
+* [x] Modify the parser.
+* [x] Modify the code generator to produce the loops and control flow.
 
 ### Add data types
 
