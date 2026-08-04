@@ -8,6 +8,10 @@ from parser import (
     PutsStmt,
     ExitStmt,
     LetStmt,
+    BlockStmt,
+    IfStmt,
+    WhileStmt,
+    ForStmt,
 )
 from lexer import TokenType
 
@@ -97,8 +101,61 @@ int main(void) {{
         if isinstance(statement, ExitStmt):
             return self.exit(statement)
 
+        if isinstance(statement, IfStmt):
+            return self.if_statement(statement)
+
+        if isinstance(statement, WhileStmt):
+            return self.while_statement(statement)
+
+        if isinstance(statement, ForStmt):
+            return self.for_statement(statement)
+
         expression_code = self.expression(statement)
         return f'    printf("%g\\n", (double)({expression_code}));'
+
+    def block(self, block: BlockStmt, indent: str = "    ") -> str:
+        lines = []
+
+        for statement in block.statements:
+            code = self.statement(statement)
+            lines.append(self.indent(code, indent))
+
+        return "\n".join(lines)
+
+    def indent(self, code: str, indent: str) -> str:
+        return "\n".join(indent + line if line else line for line in code.splitlines())
+
+    def if_statement(self, statement: IfStmt) -> str:
+        condition = self.expression(statement.condition)
+        then_body = self.block(statement.then_body)
+
+        code = f"""    if ((double)({condition})) {{
+{then_body}
+    }}"""
+
+        if statement.else_body is not None:
+            else_body = self.block(statement.else_body)
+            code += f""" else {{
+{else_body}
+    }}"""
+
+        return code
+
+    def while_statement(self, statement: WhileStmt) -> str:
+        condition = self.expression(statement.condition)
+        body = self.block(statement.body)
+
+        return f"""    while ((double)({condition})) {{
+{body}
+    }}"""
+
+    def for_statement(self, statement: ForStmt) -> str:
+        condition = self.expression(statement.condition)
+        body = self.block(statement.body)
+
+        return f"""    for (; (double)({condition}); ) {{
+{body}
+    }}"""
 
     def let(self, statement: LetStmt) -> str:
         value_type = self.resolve_type(statement.value)
