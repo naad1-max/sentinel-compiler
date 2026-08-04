@@ -7,6 +7,9 @@ class TokenType(Enum):
     FLOAT = auto()
     PLUS = auto()
     MINUS = auto()
+    STAR = auto()
+    SLASH = auto()
+    MOD = auto()
     EOF = auto()
 
 
@@ -86,6 +89,21 @@ class Lexer:
             self.advance()
             return token
 
+        if ch == "*":
+            token = Token(TokenType.STAR, ch, self.pos)
+            self.advance()
+            return token
+
+        if ch == "/":
+            token = Token(TokenType.SLASH, ch, self.pos)
+            self.advance()
+            return token
+
+        if ch == "%":
+            token = Token(TokenType.MOD, ch, self.pos)
+            self.advance()
+            return token
+
         raise LexerError(f"Unexpected character {ch!r} at position {self.pos}")
 
     def tokenize(self):
@@ -102,7 +120,7 @@ class Lexer:
 
 
 if __name__ == "__main__":
-    source = "12 + 3.5 - 7"
+    source = "12 * 3 / 2 % 5"
     lexer = Lexer(source)
 
     for token in lexer.tokenize():

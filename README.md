@@ -20,7 +20,7 @@ $ ./output
 ## To-Do List
 
 * [x] Build a compiler for a small add-subtract language.
-* [ ] Add multiplication, division and modulus.
+* [x] Add multiplication, division and modulus.
 * [ ] Add printing to the terminal.
 * [ ] Add exit.
 * [ ] Add variables.
@@ -45,9 +45,9 @@ $ ./output
 
 ### Add multiplication, division and modulus
 
-* [ ] Modify the lexer to support `*`, `/` and `%`.
-* [ ] Modify the parser to update the operator precedence.
-* [ ] Update the code generator to be able to write the new expressions.
+* [x] Modify the lexer to support `*`, `/` and `%`.
+* [x] Modify the parser to update the operator precedence.
+* [x] Update the code generator to be able to write the new expressions.
 
 ### Add printing to the terminal
 

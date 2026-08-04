@@ -39,8 +39,14 @@ int main(void) {{
     def binary(self, expr: BinaryExpr) -> str:
         left = self.expression(expr.left)
         right = self.expression(expr.right)
-        operator = self.operator(expr.operator)
 
+        if expr.operator == TokenType.SLASH:
+            return f"((double)({left}) / (double)({right}))"
+
+        if expr.operator == TokenType.MOD:
+            return f"((int)({left}) % (int)({right}))"
+
+        operator = self.operator(expr.operator)
         return f"({left} {operator} {right})"
 
     def operator(self, token_type: TokenType) -> str:
@@ -49,6 +55,9 @@ int main(void) {{
 
         if token_type == TokenType.MINUS:
             return "-"
+
+        if token_type == TokenType.STAR:
+            return "*"
 
         raise CodeGenError(f"Unknown binary operator: {token_type}")
 
