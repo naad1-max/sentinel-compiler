@@ -8,3 +8,6 @@ tmp/
 *.asm
 *.c
 *.bin
+
+output
+output.c
