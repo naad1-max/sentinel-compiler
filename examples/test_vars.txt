@@ -1,0 +1,5 @@
+let x = 12
+puts x
+let hello = "Hello, world!\n"
+puts hello
+exit 0

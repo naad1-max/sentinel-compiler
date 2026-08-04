@@ -23,7 +23,7 @@ $ ./output
 * [x] Add multiplication, division and modulus.
 * [x] Add printing to the terminal.
 * [x] Add exit.
-* [ ] Add variables.
+* [x] Add variables.
 * [ ] Add if/else if/else/while/for.
 * [ ] Add data types.
 * [ ] Add type checking.
@@ -63,9 +63,9 @@ $ ./output
 
 ### Add variables
 
-* [ ] Modify the lexer to include the `identifier` type.
-* [ ] Modify the parser to be two-pass. One pass will find all the variables, the other will parse the tokens into an AST.
-* [ ] Modify the code generator to use the variables.
+* [x] Modify the lexer. 
+* [x] Modify the parser. 
+* [x] Modify the code generator to use the variables.
 
 ### Add if/else if/else/while/for
 

@@ -38,10 +38,22 @@ class Program:
     statements: list[object]
 
 
+@dataclass(frozen=True)
+class VariableExpr:
+    name: str
+
+
+@dataclass(frozen=True)
+class LetStmt:
+    name: str
+    value: object
+
+
 class Parser:
     def __init__(self, source: str):
         self.tokens = Lexer(source).tokenize()
         self.pos = 0
+        self.variables = {}
 
     def current_token(self) -> Token:
         return self.tokens[self.pos]
@@ -72,6 +84,9 @@ class Parser:
         return Program(statements)
 
     def statement(self):
+        if self.current_token().type == TokenType.LET:
+            return self.let_statement()
+
         if self.current_token().type == TokenType.PUTS:
             return self.puts_statement()
 
@@ -79,6 +94,35 @@ class Parser:
             return self.exit_statement()
 
         return self.expression()
+
+    def let_statement(self):
+        self.expect(TokenType.LET)
+
+        name_token = self.current_token()
+
+        if name_token.type != TokenType.IDENTIFIER:
+            raise ParserError(
+                f"Expected variable name after let, got {name_token.type.name} "
+                f"at position {name_token.position}"
+            )
+
+        name = self.advance().value
+
+        self.expect(TokenType.EQUAL)
+
+        if self.current_token().type in (TokenType.PUTS, TokenType.EXIT, TokenType.LET):
+            token = self.current_token()
+            raise ParserError(
+                f"Expected value after '=', got statement keyword {token.value!r} "
+                f"at position {token.position}"
+            )
+
+        value = self.expression()
+        value_type = self.resolve_type(value)
+
+        self.variables[name] = value_type
+
+        return LetStmt(name, value)
 
     def exit_statement(self):
         self.expect(TokenType.EXIT)
@@ -133,6 +177,8 @@ class Parser:
             operator = self.advance()
             right = self.primary()
 
+            self.validate_numeric_binary(left, right, operator)
+
             if operator.type == TokenType.MOD:
                 self.validate_modulus(left, right, operator)
 
@@ -141,7 +187,10 @@ class Parser:
         return left
 
     def validate_numeric_binary(self, left, right, operator: Token):
-        if isinstance(left, StringExpr) or isinstance(right, StringExpr):
+        left_type = self.resolve_type(left)
+        right_type = self.resolve_type(right)
+
+        if left_type == "string" or right_type == "string":
             raise ParserError(
                 f"Operator {operator.value!r} requires numeric operands "
                 f"at position {operator.position}"
@@ -161,6 +210,16 @@ class Parser:
         if token.type == TokenType.STRING:
             self.advance()
             return StringExpr(token.value)
+
+        if token.type == TokenType.IDENTIFIER:
+            self.advance()
+
+            if token.value not in self.variables:
+                raise ParserError(
+                    f"Unknown variable {token.value!r} at position {token.position}"
+                )
+
+            return VariableExpr(token.value)
 
         raise ParserError(
             f"Expected expression, got {token.type.name} at position {token.position}"
@@ -182,11 +241,40 @@ class Parser:
         )
 
     def validate_modulus(self, left, right, operator: Token):
-        if not self.is_integer_expr(left) or not self.is_integer_expr(right):
+        if self.resolve_type(left) != "int" or self.resolve_type(right) != "int":
             raise ParserError(
                 f"Modulus operator requires integer operands at position "
                 f"{operator.position}"
             )
+
+    def resolve_type(self, expr) -> str:
+        if isinstance(expr, NumberExpr):
+            if isinstance(expr.value, int):
+                return "int"
+            return "float"
+
+        if isinstance(expr, StringExpr):
+            return "string"
+
+        if isinstance(expr, VariableExpr):
+            return self.variables[expr.name]
+
+        if isinstance(expr, BinaryExpr):
+            left_type = self.resolve_type(expr.left)
+            right_type = self.resolve_type(expr.right)
+
+            if expr.operator == TokenType.MOD:
+                return "int"
+
+            if expr.operator == TokenType.SLASH:
+                return "float"
+
+            if left_type == "float" or right_type == "float":
+                return "float"
+
+            return "int"
+
+        raise ParserError(f"Cannot resolve type for expression: {expr!r}")
 
     def is_integer_expr(self, expr) -> bool:
         if isinstance(expr, NumberExpr):

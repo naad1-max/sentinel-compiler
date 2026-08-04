@@ -6,13 +6,16 @@ class TokenType(Enum):
     INT = auto()
     FLOAT = auto()
     STRING = auto()
+    IDENTIFIER = auto()
     PLUS = auto()
     MINUS = auto()
     STAR = auto()
     SLASH = auto()
     MOD = auto()
+    EQUAL = auto()
     PUTS = auto()
     EXIT = auto()
+    LET = auto()
     EOF = auto()
 
 
@@ -113,6 +116,11 @@ class Lexer:
         if ch == '"' or ch == "'":
             return self.string()
 
+        if ch == "=":
+            token = Token(TokenType.EQUAL, ch, self.pos)
+            self.advance()
+            return token
+
         raise LexerError(f"Unexpected character {ch!r} at position {self.pos}")
 
     def identifier(self):
@@ -125,13 +133,14 @@ class Lexer:
 
         text = self.source[start:self.pos]
 
-        if text == "puts":
-            return Token(TokenType.PUTS, text, start)
+        keywords = {
+            "puts": TokenType.PUTS,
+            "exit": TokenType.EXIT,
+            "let": TokenType.LET,
+        }
 
-        if text == "exit":
-            return Token(TokenType.EXIT, text, start)
-
-        raise LexerError(f"Unknown keyword {text!r} at position {start}")
+        token_type = keywords.get(text, TokenType.IDENTIFIER)
+        return Token(token_type, text, start)
 
     def string(self):
         quote = self.current_char()

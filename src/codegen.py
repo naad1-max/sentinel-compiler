@@ -3,9 +3,11 @@ from parser import (
     Program,
     NumberExpr,
     StringExpr,
+    VariableExpr,
     BinaryExpr,
     PutsStmt,
     ExitStmt,
+    LetStmt,
 )
 from lexer import TokenType
 
@@ -15,6 +17,9 @@ class CodeGenError(Exception):
 
 
 class CCodeGenerator:
+    def __init__(self):
+        self.variables = {}
+
     def generate(self, program: Program) -> str:
         lines = []
 
@@ -38,12 +43,21 @@ int main(void) {{
             return self.number(expr)
 
         if isinstance(expr, StringExpr):
-            raise CodeGenError("String expressions can only be used with puts")
+            return f'"{self.c_string(expr.value)}"'
+
+        if isinstance(expr, VariableExpr):
+            return self.variable(expr)
 
         if isinstance(expr, BinaryExpr):
             return self.binary(expr)
 
         raise CodeGenError(f"Unknown expression node: {expr!r}")
+
+    def variable(self, expr: VariableExpr) -> str:
+        if expr.name not in self.variables:
+            raise CodeGenError(f"Unknown variable: {expr.name!r}")
+
+        return expr.name
 
     def number(self, expr: NumberExpr) -> str:
         return repr(expr.value)
@@ -74,6 +88,9 @@ int main(void) {{
         raise CodeGenError(f"Unknown binary operator: {token_type}")
 
     def statement(self, statement) -> str:
+        if isinstance(statement, LetStmt):
+            return self.let(statement)
+
         if isinstance(statement, PutsStmt):
             return self.puts(statement)
 
@@ -83,13 +100,66 @@ int main(void) {{
         expression_code = self.expression(statement)
         return f'    printf("%g\\n", (double)({expression_code}));'
 
-    def puts(self, statement: PutsStmt) -> str:
-        if isinstance(statement.value, StringExpr):
-            value = self.c_string(statement.value.value)
-            return f'    printf("%s\\n", "{value}");'
+    def let(self, statement: LetStmt) -> str:
+        value_type = self.resolve_type(statement.value)
+        self.variables[statement.name] = value_type
 
-        expression_code = self.expression(statement.value)
-        return f'    printf("%g\\n", (double)({expression_code}));'
+        value_code = self.expression(statement.value)
+
+        if value_type == "string":
+            return f'    const char *{statement.name} = {value_code};'
+
+        if value_type == "float":
+            return f"    double {statement.name} = {value_code};"
+
+        if value_type == "int":
+            return f"    int {statement.name} = {value_code};"
+
+        raise CodeGenError(f"Unknown variable type: {value_type}")
+
+    def puts(self, statement: PutsStmt) -> str:
+        value_type = self.resolve_type(statement.value)
+        value_code = self.expression(statement.value)
+
+        if value_type == "string":
+            return f'    printf("%s\\n", {value_code});'
+
+        return f'    printf("%g\\n", (double)({value_code}));'
+
+    def resolve_type(self, expr) -> str:
+        if isinstance(expr, NumberExpr):
+            if isinstance(expr.value, int):
+                return "int"
+            return "float"
+
+        if isinstance(expr, StringExpr):
+            return "string"
+
+        if isinstance(expr, VariableExpr):
+            if expr.name not in self.variables:
+                raise CodeGenError(f"Unknown variable: {expr.name!r}")
+
+            return self.variables[expr.name]
+
+        if isinstance(expr, BinaryExpr):
+            left_type = self.resolve_type(expr.left)
+            right_type = self.resolve_type(expr.right)
+
+            if left_type == "string" or right_type == "string":
+                raise CodeGenError("Cannot generate arithmetic for strings")
+
+            if expr.operator == TokenType.MOD:
+                return "int"
+
+            if expr.operator == TokenType.SLASH:
+                return "float"
+
+            if left_type == "float" or right_type == "float":
+                return "float"
+
+            return "int"
+
+        raise CodeGenError(f"Cannot resolve type for expression: {expr!r}")
 
     def exit(self, statement: ExitStmt) -> str:
         return f"    return {statement.code};"
