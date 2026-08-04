@@ -22,7 +22,7 @@ $ ./output
 * [x] Build a compiler for a small add-subtract language.
 * [x] Add multiplication, division and modulus.
 * [x] Add printing to the terminal.
-* [ ] Add exit.
+* [x] Add exit.
 * [ ] Add variables.
 * [ ] Add if/else if/else/while/for.
 * [ ] Add data types.
