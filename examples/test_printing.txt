@@ -1,0 +1,3 @@
+puts "Hello, world!\n"
+puts 'Hello, world, from single quotes!\n'
+exit 0

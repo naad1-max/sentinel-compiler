@@ -1,3 +1,2 @@
-python3 src/compiler.py examples/example.txt
+python3 src/compiler.py $1
 clang output.c -o output
-./output

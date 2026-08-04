@@ -29,6 +29,11 @@ class PutsStmt:
 
 
 @dataclass(frozen=True)
+class ExitStmt:
+    code: int
+
+
+@dataclass(frozen=True)
 class Program:
     statements: list[object]
 
@@ -70,7 +75,32 @@ class Parser:
         if self.current_token().type == TokenType.PUTS:
             return self.puts_statement()
 
+        if self.current_token().type == TokenType.EXIT:
+            return self.exit_statement()
+
         return self.expression()
+
+    def exit_statement(self):
+        self.expect(TokenType.EXIT)
+
+        token = self.current_token()
+
+        if token.type != TokenType.INT:
+            raise ParserError(
+                f"Expected integer exit code, got {token.type.name} "
+                f"at position {token.position}"
+            )
+
+        code = self.advance().value
+
+        if self.current_token().type != TokenType.EOF:
+            token = self.current_token()
+            raise ParserError(
+                f"Unexpected token after exit statement: {token.type.name} "
+                f"at position {token.position}"
+            )
+
+        return ExitStmt(code)
 
     def puts_statement(self):
         self.expect(TokenType.PUTS)
