@@ -1,92 +1,109 @@
-INT         = 'INT'
-FLOAT       = 'FLOAT'
-PLUS        = 'PLUS'
-MINUS       = 'MINUS'
-EOF         = 'EOF'
+from dataclasses import dataclass
+from enum import Enum, auto
 
+
+class TokenType(Enum):
+    INT = auto()
+    FLOAT = auto()
+    PLUS = auto()
+    MINUS = auto()
+    EOF = auto()
+
+
+@dataclass(frozen=True)
 class Token:
-    def __init__(self, type_, value=None):
-        self.type = type_
-        self.value = value
-
-    def __repr__(self):
-        if self.value:
-            return f'{self.type}:{self.value}'
-        return f'{self.type}'
+    type: TokenType
+    value: object
+    position: int
 
 
-class Position:
-    def __init__(self, idx, ln, col):
-        self.idx = idx
-        self.ln = ln
-        self.col = col
-
-    def advance(self, char=None):
-        self.idx += 1
-        self.col += 1
-
-        if char == '\n':
-            self.ln += 1
-            self.col = 1
+class LexerError(Exception):
+    pass
 
 
 class Lexer:
-    def __init__(self, text):
-        self.text = text
-        self.pos = Position(-1, 0, 0)
-        self.char = None
-        self.advance()
+    def __init__(self, source: str):
+        self.source = source
+        self.pos = 0
+
+    def current_char(self):
+        if self.pos >= len(self.source):
+            return None
+        return self.source[self.pos]
 
     def advance(self):
-        self.pos.advance(self.char)
+        self.pos += 1
 
-        if self.pos.idx < len(self.text):
-            self.char = self.text[self.pos.idx]
-        else:
-            self.char = None
+    def skip_whitespace(self):
+        while self.current_char() is not None and self.current_char().isspace():
+            self.advance()
+
+    def number(self):
+        start = self.pos
+        dots = 0
+
+        while self.current_char() is not None:
+            ch = self.current_char()
+
+            if ch.isdigit():
+                self.advance()
+            elif ch == ".":
+                dots += 1
+                if dots > 1:
+                    raise LexerError(f"Invalid number at position {self.pos}")
+                self.advance()
+            else:
+                break
+
+        text = self.source[start:self.pos]
+
+        if text.endswith("."):
+            raise LexerError(f"Invalid float at position {start}")
+
+        if dots == 1:
+            return Token(TokenType.FLOAT, float(text), start)
+
+        return Token(TokenType.INT, int(text), start)
+
+    def next_token(self):
+        self.skip_whitespace()
+
+        ch = self.current_char()
+
+        if ch is None:
+            return Token(TokenType.EOF, None, self.pos)
+
+        if ch.isdigit():
+            return self.number()
+
+        if ch == "+":
+            token = Token(TokenType.PLUS, ch, self.pos)
+            self.advance()
+            return token
+
+        if ch == "-":
+            token = Token(TokenType.MINUS, ch, self.pos)
+            self.advance()
+            return token
+
+        raise LexerError(f"Unexpected character {ch!r} at position {self.pos}")
 
     def tokenize(self):
         tokens = []
 
-        while self.char is not None:
-            if self.char in " \t\n":
-                self.advance()
-            elif self.char.isdigit():
-                tokens.append(self.ret_number())
-            elif self.char == "+":
-                tokens.append(Token(PLUS))
-                self.advance()
-            elif self.char == "-":
-                tokens.append(Token(PLUS))
-                self.advance()
-            else:
-                raise Exception("Unknown token.")
+        while True:
+            token = self.next_token()
+            tokens.append(token)
 
-        tokens.append(Token(EOF))
+            if token.type == TokenType.EOF:
+                break
+
         return tokens
 
-    def ret_number(self):
-        num = ""
-        dots = 0
 
-        while self.char is not None and (self.char.isdigit() or self.char == "."):
-            if self.char == ".":
-                if dots == 1:
-                    raise Exception("Can't have more than one dot in a number.")
-                num += '.'
-            else:
-                num += self.char
-            self.advance()
+if __name__ == "__main__":
+    source = "12 + 3.5 - 7"
+    lexer = Lexer(source)
 
-        if num.startswith(".") or num.endswith("."):
-            raise Exception("Invalid floating point.")
-
-        if dots == 0:
-            return Token(INT, int(num))
-        else:
-            return Token(FLOAT, float(num))
-
-
-def lexer_main(text):
-    lexer = Lexer(text)
-    return lexer.tokenize()
+    for token in lexer.tokenize():
+        print(token)

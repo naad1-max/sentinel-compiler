@@ -19,7 +19,7 @@ $ ./output
 
 ## To-Do List
 
-* [ ] Build a compiler for a small add-subtract language.
+* [x] Build a compiler for a small add-subtract language.
 * [ ] Add multiplication, division and modulus.
 * [ ] Add printing to the terminal.
 * [ ] Add exit.
@@ -40,8 +40,8 @@ $ ./output
 
 * [x] Build a lexer.
 * [x] Add AST definitions.
-* [ ] Build a parser.
-* [ ] Build a code generator that generates the C code.
+* [x] Build a parser.
+* [x] Build a code generator that generates the C code.
 
 ### Add multiplication, division and modulus
 

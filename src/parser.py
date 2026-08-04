@@ -1,64 +1,89 @@
-from .ast import Program, NumberLiteral, BinaryExpr, BinaryOp, Span
+from dataclasses import dataclass
+from lexer import Lexer, Token, TokenType
+
 
 class ParserError(Exception):
     pass
 
+
+@dataclass(frozen=True)
+class NumberExpr:
+    value: int | float
+
+
+@dataclass(frozen=True)
+class BinaryExpr:
+    left: object
+    operator: TokenType
+    right: object
+
+
+@dataclass(frozen=True)
+class Program:
+    expressions: list
+
+
 class Parser:
-    def __init__(self, tokens):
-        self.tokens = tokens
-        self.idx = 0
-        self.current = tokens[0]
+    def __init__(self, source: str):
+        self.tokens = Lexer(source).tokenize()
+        self.pos = 0
 
-    def advance(self):
-        if self.idx < len(self.tokens) - 1:
-            self.idx += 1
-            self.current = self.tokens[self.idx]
+    def current_token(self) -> Token:
+        return self.tokens[self.pos]
 
-    def error(self, message):
-        t = self.current
-        raise ParserError(f"{message}\nLine {t.line}, col {t.col}, at idx {t.idx}")
+    def advance(self) -> Token:
+        token = self.current_token()
+        self.pos += 1
+        return token
 
-    def expect(self, type_):
-        if self.current.type_ != type_:
-            self.error(f"Expected {type_}, got {self.current.type_}")
-        tok = self.current
-        self.advance()
-        return tok
+    def expect(self, token_type: TokenType) -> Token:
+        token = self.current_token()
 
-    def make_span(self, start_tok, end_tok):
-        return Span(
-            start=start_tok.idx,
-            end=end_tok.idx,
-            line=start_tok.line,
-            column=start_tok.col,
-        )
-
-    def parse_program(self):
-        expr = self.parse_expr()
-        eof = self.expect("EOF")
-        return Program(expr=expr, span=self.make_span(self.tokens[0], eof))
-
-    def parse_expr(self):
-        left = self.parse_atom()
-        while self.current.type_ in ("PLUS", "MINUS"):
-            op_tok = self.current
-            self.advance()
-            right = self.parse_atom()
-
-            op = BinaryOp.ADD if op_tok.type_ == "PLUS" else BinaryOp.SUB
-            span = self.make_span(left.span_start_token, right=right, span=span)
-            left = BinaryExpr(op, left, right, span)
-        return left
-
-    def parse_atom(self):
-        tok = self.current
-        if tok.type_ == "INT" or tok.type_ == "FLOAT":
-            self.advance()
-            value=float(tok.value)
-            return NumberLiteral(
-                value=value,
-                raw=str(tok.value),
-                span=Span(tok.idx, tok.idx, tok.line, tok.col),
+        if token.type != token_type:
+            raise ParserError(
+                f"Expected {token_type.name}, got {token.type.name} "
+                f"at position {token.position}"
             )
 
-        self.error(f"Expected number, got {tok.type_}")
+        return self.advance()
+
+    def parse(self) -> Program:
+        expressions = []
+
+        while self.current_token().type != TokenType.EOF:
+            expressions.append(self.expression())
+
+        self.expect(TokenType.EOF)
+        return Program(expressions)
+
+    def expression(self):
+        left = self.number()
+
+        while self.current_token().type in (TokenType.PLUS, TokenType.MINUS):
+            operator = self.advance()
+            right = self.number()
+            left = BinaryExpr(left, operator.type, right)
+
+        return left
+
+    def number(self):
+        token = self.current_token()
+
+        if token.type == TokenType.INT:
+            self.advance()
+            return NumberExpr(token.value)
+
+        if token.type == TokenType.FLOAT:
+            self.advance()
+            return NumberExpr(token.value)
+
+        raise ParserError(
+            f"Expected number, got {token.type.name} at position {token.position}"
+        )
+
+
+if __name__ == "__main__":
+    source = "12 + 3.5 - 7"
+    parser = Parser(source)
+    ast = parser.parse()
+    print(ast)
