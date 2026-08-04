@@ -5,11 +5,13 @@ from enum import Enum, auto
 class TokenType(Enum):
     INT = auto()
     FLOAT = auto()
+    STRING = auto()
     PLUS = auto()
     MINUS = auto()
     STAR = auto()
     SLASH = auto()
     MOD = auto()
+    PUTS = auto()
     EOF = auto()
 
 
@@ -104,7 +106,69 @@ class Lexer:
             self.advance()
             return token
 
+        if ch.isalpha() or ch == "_":
+            return self.identifier()
+
+        if ch == '"' or ch == "'":
+            return self.string()
+
         raise LexerError(f"Unexpected character {ch!r} at position {self.pos}")
+
+    def identifier(self):
+        start = self.pos
+
+        while self.current_char() is not None and (
+            self.current_char().isalnum() or self.current_char() == "_"
+        ):
+            self.advance()
+
+        text = self.source[start:self.pos]
+
+        if text == "puts":
+            return Token(TokenType.PUTS, text, start)
+
+        raise LexerError(f"Unknown keyword {text!r} at position {start}")
+
+    def string(self):
+        quote = self.current_char()
+        start = self.pos
+        self.advance()
+
+        value = ""
+
+        while self.current_char() is not None and self.current_char() != quote:
+            ch = self.current_char()
+
+            if ch == "\\":
+                self.advance()
+                escaped = self.current_char()
+
+                if escaped is None:
+                    raise LexerError(f"Unterminated string at position {start}")
+
+                if escaped == "n":
+                    value += "\n"
+                elif escaped == "t":
+                    value += "\t"
+                elif escaped == quote:
+                    value += quote
+                elif escaped == "\\":
+                    value += "\\"
+                else:
+                    raise LexerError(
+                        f"Unknown escape sequence \\{escaped} at position {self.pos}"
+                    )
+
+                self.advance()
+            else:
+                value += ch
+                self.advance()
+
+        if self.current_char() != quote:
+            raise LexerError(f"Unterminated string at position {start}")
+
+        self.advance()
+        return Token(TokenType.STRING, value, start)
 
     def tokenize(self):
         tokens = []
