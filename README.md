@@ -4,6 +4,12 @@ Sentinel programming language is a statically typed, compiled programming langua
 
 Windows users, don't worry. You'll never have to look at the source code because I've made `compile.ps1` a CRLF file in the `.gitattributes`. 
 
+## Dependencies
+
+* MacOS: Homebrew clang, python3.14
+* Linux: LLVM clang, python3.14
+* Windows: MINGW64 GCC, python3.14
+
 ## Quick Start
 
 ```bash
@@ -11,8 +17,12 @@ $ gh repo clone naad1-max/sentinel-compiler
 $ cd sentinel-compiler
 # On macOS/Linux
 $ ./compile.sh examples/test_math_eval.txt
+```
+```powershell
 # On Windows
-$ .\\compile.ps1 .\\examples\\test_math_eval.txt
+$ .\compile.ps1 .\examples\test_math_eval.txt
+```
+```bash
 # Running the file: universal
 $ ./output
 ```
@@ -25,6 +35,7 @@ $ ./output
 * [x] Add exit.
 * [x] Add variables.
 * [x] Add if/else/while/for.
+* [ ] Add comparison operators
 * [ ] Add data types.
 * [ ] Add type checking.
 * [ ] Add functions.
@@ -72,6 +83,12 @@ $ ./output
 * [x] Modify the lexer to support the keywords.
 * [x] Modify the parser.
 * [x] Modify the code generator to produce the loops and control flow.
+
+### Add comparison operators
+
+* [ ] Implement eq, neq.
+* [ ] Implement lt, gt.
+* [ ] Implement le, ge.
 
 ### Add data types
 
